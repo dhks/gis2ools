@@ -32,7 +32,6 @@ def main():
     parser.add_argument('-f', type=str, help='gist file name', default=None)
     parser.add_argument('-d', type=str, help='description of the gist', default=None)
 
-
     parser.add_argument('-u', '--user', help='user help', default=None)
 
 

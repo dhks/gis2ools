@@ -44,19 +44,6 @@ class Handler(object):
         response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
         return json.loads(response.decode('utf8', 'ignore'))
 
-
-    def create_post_request(self,json_str, url, token):
-	command = ["curl",'-X','POST','-d',json_str, '-K', '-', url]
-        config = ['--header "Authorization: token ' + token + '"',
-                  '--header "Accept: application/json"',
-                  '--header "Content-Type: application/json"',
-                  "--silent"]
-
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
-        return json.loads(response.decode('utf8', 'ignore'))
-
-
     def get_user(self, user):
         """
         Gets user info of a gist user.
@@ -80,32 +67,16 @@ class Handler(object):
         if user:
             response = self.create_request(self.url + 'users/' + user + '/gists', self.token)
         else:
-	    print user
             response = self.create_request(self.url + 'gists', self.token)
         GistPrinter.print_gist(response)
         print len(response)
 
-    def create_gist(self, user,file_name,description):
+    def create_gist(self, gist_name):
         """
         Creates gist using OAuth token.
         :param gist_name: name of the gist.
         :return: True on success.
         """
-	print "reading "+file_name+"..."
-	f=open(file_name)
-	json_req={"description": description,\
-		  "public": True,\
-		  "files": {\
-    			""+file_name: {\
-      				"content": ""+f.read()\
-    				}\
-  			}\
-		}
-	json_str=json.dumps(json_req)
-	print "creating gist..."
-	response =self.create_post_request(json_str,self.url+'gists',self.token)
-	       
-	print "Created at "+response['created_at']
 
     def delete_gist(self, gist_name):
         """
@@ -126,9 +97,6 @@ class Handler(object):
             self.get_user(args.user)
         elif args.command == 'list':
             self.list_gists(args.user)
-	elif args.command == 'create':
-	    self.create_gist(args.user,args.f,args.d)
-	    
 
 
 class GistPrinter():
