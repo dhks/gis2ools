@@ -16,7 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
 import json
+import time
 import subprocess
 import ConfigParser
 from prettytable import PrettyTable
@@ -44,8 +46,8 @@ class Handler(object):
         response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
         return json.loads(response.decode('utf8', 'ignore'))
 
-    def create_post_request(self,json_str, url, token):
-	command = ["curl",'-X','POST','-d',json_str, '-K', '-', url]
+    def create_post_request(self, json_str, url, token):
+        command = ["curl", '-X', 'POST', '-d', json_str, '-K', '-', url]
         config = ['--header "Authorization: token ' + token + '"',
                   '--header "Accept: application/json"',
                   '--header "Content-Type: application/json"',
@@ -82,32 +84,30 @@ class Handler(object):
         GistPrinter.print_gist(response)
         print len(response)
 
-    def create_gist(self, file_name,gist_description):
+    def create_gist(self, file_name, description):
         """
         Creates gist using OAuth token.
         :param gist_name: name of the gist.
         :return: True on success.
         """
-	try:
-		print "reading file..."
-		content =open(file_name)
-		json_req={
-			  "description": ""+gist_description,
-			  "public": True,
-			  "files": {
-			    ""+file_name: {
-			      "content": ""+content.read()
-			    }
-			  }
-			}
-		print "creating gist..."
-		
-		response =self.create_post_request(json.dumps(json_req),self.url+ 'gists', self.token)
-		print "[Done] Requested gist is created at: "+response["created_at"]
-		
-
-	except IOError:
-		print "No such file"
+        try:
+            print "reading file..."
+            content = open(file_name)
+            json_req = {
+                "description": "" + description,
+                "public": True,
+                "files": {
+                    "" + file_name: {
+                        "content": "" + content.read()
+                    }
+                }
+            }
+            print "creating gist..."
+            response = self.create_post_request(json.dumps(json_req), self.url + 'gists', self.token)
+            print response
+            print "[Done] Requested gist is created at: " + response["created_at"]
+        except IOError:
+            print "No such file"
 
     def delete_gist(self, gist_name):
         """
@@ -128,8 +128,8 @@ class Handler(object):
             self.get_user(args.user)
         elif args.command == 'list':
             self.list_gists(args.user)
-	elif args.command == 'create':
-	    self.create_gist(args.f,args.d)
+        elif args.command == 'create':
+            self.create_gist(args.file_name, args.description)
 
 
 class GistPrinter():
@@ -140,7 +140,7 @@ class GistPrinter():
         #TODO need to re-write functionality for printing gists properly.
         table = PrettyTable(['Gist Name', 'Description', 'URL'])
         table.header = False
-        # table.border = False
+        table.border = False
         for gist in gists:
             table.add_row([gist['files'].keys()[0], gist['description'], gist['url']])
         table.align['Gist Name'] = 'l'
@@ -153,4 +153,7 @@ class GistPrinter():
         print "Name: " + user['name']
         print "Email: " + user['email']
         print "Public Gists: " + str(user['public_gists'])
-        print "Private Gists: " + str(user['private_gists'])
+        try:
+            print "Private Gists: " + str(user['private_gists'])
+        except KeyError:
+            pass
