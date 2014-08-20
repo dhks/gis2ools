@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+import pycurl
+import StringIO
+
 import os
 import sys
 import json
 import time
-import subprocess
 import ConfigParser
 from prettytable import PrettyTable
 
@@ -36,27 +39,43 @@ class Handler(object):
         return config
 
     def create_request(self, url, token):
-        command = ["curl", '-K', '-', url]
-        config = ['--header "Authorization: token ' + token + '"',
-                  '--header "Accept: application/json"',
-                  '--header "Content-Type: application/json"',
-                  "--silent"]
+        config = ['Authorization: token ' + token,
+                  'Accept: application/json',
+                  'Content-Type: application/json']
+	
+	buf = StringIO.StringIO()
 
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
-        return json.loads(response.decode('utf8', 'ignore'))
+	c = pycurl.Curl()
+	c.setopt(pycurl.URL, url)
+	c.setopt(pycurl.HTTPHEADER, config)	
+	c.setopt(c.WRITEFUNCTION, buf.write)
+	#c.setopt(c.POSTFIELDS, '')
+	c.perform()
+
+	json_ = buf.getvalue()
+	
+        return json.loads(json_.decode('utf8', 'ignore'))
 
     def create_post_request(self, json_str, url, token):
-        command = ["curl", '-X', 'POST', '-d', json_str, '-K', '-', url]
-        config = ['--header "Authorization: token ' + token + '"',
-                  '--header "Accept: application/json"',
-                  '--header "Content-Type: application/json"',
-                  "--silent"]
+        config = ['Authorization: token ' + token,
+                  'Accept: application/json',
+                  'Content-Type: application/json']
+	
+	buf = StringIO.StringIO()
 
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
-        return json.loads(response.decode('utf8', 'ignore'))
+	c = pycurl.Curl()
+	c.setopt(pycurl.URL, url)
+	c.setopt(pycurl.HTTPHEADER, config)	
+	c.setopt(c.WRITEFUNCTION, buf.write)
+	#c.setopt(c.POSTFIELDS, '')
+	c.setopt(pycurl.POST, 1)
+	c.setopt(pycurl.POSTFIELDS,json_str)
+	c.perform()
 
+	json_ = buf.getvalue()
+	
+        return json.loads(json_.decode('utf8', 'ignore'))
+	
     def get_user(self, user):
         """
         Gets user info of a gist user.
@@ -104,17 +123,38 @@ class Handler(object):
             }
             print "creating gist..."
             response = self.create_post_request(json.dumps(json_req), self.url + 'gists', self.token)
-            print response
+            #print response
             print "[Done] Requested gist is created at: " + response["created_at"]
         except IOError:
             print "No such file"
 
-    def delete_gist(self, gist_name):
+    def delete_gist(self, gist_id):
         """
         Deletes gist using OAuth token.
         :param gist_name: name of the gist.
         :return: True on success.
         """
+        config = ['Authorization: token ' + self.token,
+                  'Accept: application/json',
+                  'Content-Type: application/json']
+	url=self.url + 'gists/'+gist_id;	
+
+	buf = StringIO.StringIO()
+
+	c = pycurl.Curl()
+	c.setopt(pycurl.URL, url)
+	c.setopt(pycurl.HTTPHEADER, config)	
+	c.setopt(c.WRITEFUNCTION, buf.write)
+	#c.setopt(c.POSTFIELDS, '')
+	c.setopt(pycurl.CUSTOMREQUEST, "DELETE")
+	c.perform()
+
+	json_ = buf.getvalue()
+	if len(json_)<1:
+            print gist_id+" is deleted sucessfully."
+	
+	
+#        return json.loads(json_.decode('utf8', 'ignore'))
 
     def update_gist(self, gist_name):
         """
@@ -130,6 +170,9 @@ class Handler(object):
             self.list_gists(args.user)
         elif args.command == 'create':
             self.create_gist(args.file_name, args.description)
+	elif args.command == 'delete':
+            self.delete_gist(args.id)
+		
 
 
 class GistPrinter():
@@ -138,11 +181,12 @@ class GistPrinter():
     def print_gist(gists):
         #TODO prettytable is not working great so far due to screen size limitations,
         #TODO need to re-write functionality for printing gists properly.
-        table = PrettyTable(['Gist Name', 'Description', 'URL'])
-        table.header = False
-        table.border = False
+        table = PrettyTable(['id','Gist Name', 'Description', 'URL'])
+        table.header = True
+        table.border = True
         for gist in gists:
-            table.add_row([gist['files'].keys()[0], gist['description'], gist['url']])
+            table.add_row([gist['id'],gist['files'].keys()[0], gist['description'], gist['url']])
+	table.align['id'] = 'l'
         table.align['Gist Name'] = 'l'
         table.align['Description'] = 'l'
         table.align['URL'] = 'l'
