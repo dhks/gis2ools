@@ -30,7 +30,7 @@ setup(name='gis2ools',
               'gis2ools-configure = gis2ools.gis2ools_configure:main',
           ],
       },
-      install_requires=['prettytable'],
+      install_requires=['prettytable','pycurl'],
       zip_safe=False,
       classifiers=[
           "Development Status :: 1 - Alpha",
