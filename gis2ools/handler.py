@@ -112,22 +112,24 @@ class Handler(object):
         :param gist_name: name of the gist.
         :return: True on success.
         """
-	print "reading "+file_name+"..."
-	f=open(file_name)
-	json_req={"description": description,\
-		  "public": True,\
-		  "files": {\
-    			""+file_name: {\
-      				"content": ""+f.read()\
-    				}\
-  			}\
-		}
-	json_str=json.dumps(json_req)
-	print "creating gist..."
-	response =self.create_post_request(json_str,self.url+'gists',self.token)
-
-	print "Created at "+response['created_at']
-
+        try:
+            print "reading file..."
+            content = open(file_name)
+            json_req = {
+                "description": "" + description,
+                "public": True,
+                "files": {
+                    "" + file_name: {
+                        "content": "" + content.read()
+                        }
+                }
+            }
+            print "creating gist..."
+            response = self.create_post_request(json.dumps(json_req), self.url + 'gists', self.token)
+            #print response
+            print "[Done] Requested gist is created at: " + response["created_at"]
+        except IOError:
+            print "No such file"
 
     def delete_gist(self, gist_id):
         """
