@@ -39,31 +39,6 @@ class Handler(object):
         return config
 
     def create_request(self, url, token):
-<<<<<<< HEAD
-        command = ["curl", '-K', '-', url]
-        config = ['--header "Authorization: token ' + token + '"',
-                  '--header "Accept: application/json"',
-                  '--header "Content-Type: application/json"',
-                  "--silent"]
-
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
-        return json.loads(response.decode('utf8', 'ignore'))
-
-
-    def create_post_request(self,json_str, url, token):
-	command = ["curl",'-X','POST','-d',json_str, '-K', '-', url]
-        config = ['--header "Authorization: token ' + token + '"',
-                  '--header "Accept: application/json"',
-                  '--header "Content-Type: application/json"',
-                  "--silent"]
-
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
-        return json.loads(response.decode('utf8', 'ignore'))
-
-
-=======
         config = ['Authorization: token ' + token,
                   'Accept: application/json',
                   'Content-Type: application/json']
@@ -101,7 +76,6 @@ class Handler(object):
 	
         return json.loads(json_.decode('utf8', 'ignore'))
 	
->>>>>>> main/master
     def get_user(self, user):
         """
         Gets user info of a gist user.
@@ -125,22 +99,19 @@ class Handler(object):
         if user:
             response = self.create_request(self.url + 'users/' + user + '/gists', self.token)
         else:
-	    print user
+            print user
             response = self.create_request(self.url + 'gists', self.token)
         GistPrinter.print_gist(response)
         print len(response)
+        return response
 
-<<<<<<< HEAD
-    def create_gist(self, user,file_name,description):
-=======
+
     def create_gist(self, file_name, description):
->>>>>>> main/master
         """
         Creates gist using OAuth token.
         :param gist_name: name of the gist.
         :return: True on success.
         """
-<<<<<<< HEAD
 	print "reading "+file_name+"..."
 	f=open(file_name)
 	json_req={"description": description,\
@@ -154,32 +125,11 @@ class Handler(object):
 	json_str=json.dumps(json_req)
 	print "creating gist..."
 	response =self.create_post_request(json_str,self.url+'gists',self.token)
-	       
+
 	print "Created at "+response['created_at']
 
-    def delete_gist(self, gist_name):
-=======
-        try:
-            print "reading file..."
-            content = open(file_name)
-            json_req = {
-                "description": "" + description,
-                "public": True,
-                "files": {
-                    "" + file_name: {
-                        "content": "" + content.read()
-                    }
-                }
-            }
-            print "creating gist..."
-            response = self.create_post_request(json.dumps(json_req), self.url + 'gists', self.token)
-            #print response
-            print "[Done] Requested gist is created at: " + response["created_at"]
-        except IOError:
-            print "No such file"
 
     def delete_gist(self, gist_id):
->>>>>>> main/master
         """
         Deletes gist using OAuth token.
         :param gist_name: name of the gist.
@@ -219,31 +169,32 @@ class Handler(object):
             self.get_user(args.user)
         elif args.command == 'list':
             self.list_gists(args.user)
-<<<<<<< HEAD
-	elif args.command == 'create':
-	    self.create_gist(args.user,args.f,args.d)
-	    
-=======
         elif args.command == 'create':
             self.create_gist(args.file_name, args.description)
-	elif args.command == 'delete':
-            self.delete_gist(args.id)
-		
->>>>>>> main/master
-
-
+        elif args.command == 'delete':
+            if args.id:
+                self.delete_gist(args.id)
+            else:
+                list_gists=self.list_gists(args.user)
+                n= input("Type S/N of the gist you want to delete (Hint: first cilumn of above table):")
+                if n<len(list_gists):
+                    self.delete_gist(self.list_gists(args.user)[int(n)-1]['id'])
+                else:
+                    print "Does not exist"
 class GistPrinter():
 
     @staticmethod
     def print_gist(gists):
         #TODO prettytable is not working great so far due to screen size limitations,
         #TODO need to re-write functionality for printing gists properly.
-        table = PrettyTable(['id','Gist Name', 'Description', 'URL'])
+        table = PrettyTable(['sn','id','Gist Name', 'Description', 'URL'])
         table.header = True
         table.border = True
+        sn=1
         for gist in gists:
-            table.add_row([gist['id'],gist['files'].keys()[0], gist['description'], gist['url']])
-	table.align['id'] = 'l'
+            table.add_row([sn,gist['id'],gist['files'].keys()[0], gist['description'], gist['url']])
+            sn=sn+1
+        table.align['id'] = 'l'
         table.align['Gist Name'] = 'l'
         table.align['Description'] = 'l'
         table.align['URL'] = 'l'
@@ -254,11 +205,7 @@ class GistPrinter():
         print "Name: " + user['name']
         print "Email: " + user['email']
         print "Public Gists: " + str(user['public_gists'])
-<<<<<<< HEAD
-        print "Private Gists: " + str(user['private_gists'])
-=======
         try:
             print "Private Gists: " + str(user['private_gists'])
         except KeyError:
             pass
->>>>>>> main/master
