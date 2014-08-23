@@ -1,4 +1,0 @@
-[console_scripts]
-gis2ools-configure = gis2ools.gis2ools_configure:main
-gis2ools = gis2ools.gis2ools:main
-
