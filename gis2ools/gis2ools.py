@@ -29,10 +29,14 @@ def main():
         return 'help message'
     parser = argparse.ArgumentParser(usage=msg())
     parser.add_argument('command', type=str, help='lots of help')
+
     parser.add_argument('-f', '--file-name', type=str, help='gist file name', default=None)
     parser.add_argument('-d', '--description', type=str, help='description of the gist', default="")
+
     parser.add_argument('-u', '--user', help='user help', default=None)
     parser.add_argument('-i', '--id', type=str, help='gist id', default=None)
+
+
 
     args = parser.parse_args()
 

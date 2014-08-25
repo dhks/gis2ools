@@ -99,9 +99,12 @@ class Handler(object):
         if user:
             response = self.create_request(self.url + 'users/' + user + '/gists', self.token)
         else:
+            print user
             response = self.create_request(self.url + 'gists', self.token)
         GistPrinter.print_gist(response)
         print len(response)
+        return response
+
 
     def create_gist(self, file_name, description):
         """
@@ -118,7 +121,7 @@ class Handler(object):
                 "files": {
                     "" + file_name: {
                         "content": "" + content.read()
-                    }
+                        }
                 }
             }
             print "creating gist..."
@@ -170,23 +173,30 @@ class Handler(object):
             self.list_gists(args.user)
         elif args.command == 'create':
             self.create_gist(args.file_name, args.description)
-	elif args.command == 'delete':
-            self.delete_gist(args.id)
-		
-
-
+        elif args.command == 'delete':
+            if args.id:
+                self.delete_gist(args.id)
+            else:
+                list_gists=self.list_gists(args.user)
+                n= input("Type S/N of the gist you want to delete (Hint: first cilumn of above table):")
+                if n<len(list_gists):
+                    self.delete_gist(self.list_gists(args.user)[int(n)-1]['id'])
+                else:
+                    print "Does not exist"
 class GistPrinter():
 
     @staticmethod
     def print_gist(gists):
         #TODO prettytable is not working great so far due to screen size limitations,
         #TODO need to re-write functionality for printing gists properly.
-        table = PrettyTable(['id','Gist Name', 'Description', 'URL'])
+        table = PrettyTable(['sn','id','Gist Name', 'Description', 'URL'])
         table.header = True
         table.border = True
+        sn=1
         for gist in gists:
-            table.add_row([gist['id'],gist['files'].keys()[0], gist['description'], gist['url']])
-	table.align['id'] = 'l'
+            table.add_row([sn,gist['id'],gist['files'].keys()[0], gist['description'], gist['url']])
+            sn=sn+1
+        table.align['id'] = 'l'
         table.align['Gist Name'] = 'l'
         table.align['Description'] = 'l'
         table.align['URL'] = 'l'
