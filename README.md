@@ -29,9 +29,10 @@ Command-line Gist client
     gis2ools-configure
 
 ### Usage:
+    gis2ools info
+    gis2ools info <user_name>
     gis2ools list
-    gis2ools info [user]
-    gis2ools create <gist_name>
-    gis2ools get <gist_name>
+    gis2ools create --file-name  <file_name> --description "<description>"
+    gis2ools delete
+    gis2ools delete --id <gist_id>
     gis2ools update <gist_name>
-    gis2ools delete <gist_name>
